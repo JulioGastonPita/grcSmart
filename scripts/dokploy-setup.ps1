@@ -92,19 +92,20 @@ function Step {
     Write-Host ">>> $Msg" -ForegroundColor Cyan
 }
 
-# ─── PASO 1: Listar servidores para obtener serverId ─────
-Step "Obteniendo lista de servidores..."
-$servers = Invoke-Dokploy -Endpoint "server.all" -Method "GET"
-
-if (-not $servers -or $servers.Count -eq 0) {
-    Write-Host "No se encontraron servidores en Dokploy." -ForegroundColor Red
-    Write-Host "Asegúrate de tener al menos un servidor configurado." -ForegroundColor Yellow
-    exit 1
+# ─── PASO 1: Detectar serverId (opcional en instalación local) ───
+Step "Detectando servidor..."
+$serverId = $null
+try {
+    $servers = Invoke-Dokploy -Endpoint "server.all" -Method "GET"
+    if ($servers -and $servers.Count -gt 0) {
+        $serverId = $servers[0].serverId
+        Write-Host "  Servidor remoto: $($servers[0].name) (ID: $serverId)" -ForegroundColor Green
+    } else {
+        Write-Host "  Sin servidores remotos — usando servidor local de Dokploy." -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "  Sin servidores remotos — usando servidor local de Dokploy." -ForegroundColor Yellow
 }
-
-$server   = $servers[0]
-$serverId = $server.serverId
-Write-Host "  Servidor: $($server.name) (ID: $serverId)" -ForegroundColor Green
 
 # ─── PASO 2: Crear proyecto ───────────────────────────────
 Step "Creando proyecto '$ProjectName'..."
@@ -136,11 +137,12 @@ Write-Host "  Environment: $($environment.name) (ID: $environmentId)" -Foregroun
 
 # ─── PASO 4: Crear compose service ────────────────────────
 Step "Creando servicio Docker Compose..."
-$compose = Invoke-Dokploy -Endpoint "compose.create" -Body @{
+$composeBody = @{
     name          = $ProjectName
     environmentId = $environmentId
-    serverId      = $serverId
 }
+if ($serverId) { $composeBody.serverId = $serverId }
+$compose = Invoke-Dokploy -Endpoint "compose.create" -Body $composeBody
 $composeId = $compose.composeId
 Write-Host "  Compose service creado (ID: $composeId)" -ForegroundColor Green
 
