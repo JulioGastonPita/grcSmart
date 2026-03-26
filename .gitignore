@@ -1,0 +1,30 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Go
+backend/bin/
+backend/*.exe
+backend/tmp/
+
+# Uploads (archivos físicos de producción/dev)
+uploads/
+backend/uploads/
+
+# Node / Quasar
+frontend/node_modules/
+frontend/dist/
+frontend/.quasar/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
