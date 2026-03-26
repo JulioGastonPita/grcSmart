@@ -27,6 +27,26 @@ param(
     [switch]$Deploy   # Agrega este flag para disparar el deploy al final
 )
 
+# ─── Cargar .env.local si existe ──────────────────────────
+$envLocalPath = Join-Path $PSScriptRoot "..\. env.local"
+$envLocalPath = Join-Path $PSScriptRoot "..\.env.local"
+if (Test-Path $envLocalPath) {
+    Get-Content $envLocalPath | ForEach-Object {
+        if ($_ -match "^\s*([^#][^=]+)=(.*)$") {
+            $k = $matches[1].Trim()
+            $v = $matches[2].Trim()
+            if (-not [System.Environment]::GetEnvironmentVariable($k, "Process")) {
+                [System.Environment]::SetEnvironmentVariable($k, $v, "Process")
+            }
+        }
+    }
+    if (-not $ApiKey) { $ApiKey = $env:DOKPLOY_API_KEY }
+    if (-not $DokployUrl -or $DokployUrl -eq "http://dokploy.edensa.com.ar:3000") {
+        $fromEnv = $env:DOKPLOY_URL
+        if ($fromEnv) { $DokployUrl = $fromEnv }
+    }
+}
+
 # ─── Validaciones ─────────────────────────────────────────
 if (-not $ApiKey) {
     Write-Host "ERROR: Se requiere una API key de Dokploy." -ForegroundColor Red
