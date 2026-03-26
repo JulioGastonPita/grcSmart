@@ -14,7 +14,6 @@ import (
 const (
 	chunkSize    = 1000
 	chunkOverlap = 200
-	topK         = 5
 )
 
 type DocumentService struct {

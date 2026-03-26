@@ -9,6 +9,8 @@ import (
 	"github.com/JulioGastonPita/grcSmart/backend/internal/infrastructure/vectordb"
 )
 
+const topK = 5
+
 const systemPromptTemplate = `Eres un asistente experto en políticas y procedimientos corporativos.
 Responde SOLO basándote en el siguiente contexto extraído de los documentos oficiales.
 Si la información no está en el contexto, responde que no tienes información suficiente.
