@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: grcsmart_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: grcsmart
+      POSTGRES_PASSWORD: grcsmart_pass
+      POSTGRES_DB: grcsmart_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grcsmart -d grcsmart_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:0.4.24
+    container_name: grcsmart_chroma_dev
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_dev_data:/chroma/chroma
+    environment:
+      ALLOW_RESET: "true"
+      ANONYMIZED_TELEMETRY: "false"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: grcsmart_backend_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: grcsmart
+      DB_PASSWORD: grcsmart_pass
+      DB_NAME: grcsmart_db
+      CHROMA_URL: http://chromadb:8000
+      UPLOADS_DIR: /uploads
+      GIN_MODE: debug
+    volumes:
+      - uploads_dev_data:/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+
+volumes:
+  postgres_dev_data:
+  chroma_dev_data:
+  uploads_dev_data:
