@@ -1,0 +1,49 @@
+Actúa como un Arquitecto de Software Senior, experto en Go, Vue 3 (Quasar Framework) y DevOps. Tu objetivo es inicializar y desarrollar un proyecto de RAG (Retrieval-Augmented Generation) para consultar políticas y procedimientos en formato PDF.
+
+El proyecto usará un flujo GitOps apuntando al repositorio remoto: https://github.com/JulioGastonPita/grcSmart.git que será desplegado en producción usando Dokploy.
+
+Debes crear la estructura en un "Monorepo" y escribir el código base paso a paso, consultándome antes de ejecutar comandos masivos. Sigue estrictamente estas especificaciones:
+
+# 1. ARQUITECTURA GENERAL Y MONOREPO
+Crea un monorepo con la siguiente estructura base:
+/grcSmart
+  /backend (Go con Gin)
+  /frontend (Vue 3 + Quasar + Pinia)
+  /scripts (Scripts .ps1 de PowerShell)
+  docker-compose.yml (Para producción en Dokploy)
+  docker-compose.dev.yml (Para desarrollo local)
+
+# 2. INFRAESTRUCTURA Y DEVOPS (Local vs Producción)
+- Inicializa el repositorio Git y añade el remote origin `https://github.com/JulioGastonPita/grcSmart.git`.
+- **Desarrollo Local (`docker-compose.dev.yml`):** Levanta PostgreSQL, ChromaDB y el Backend en Go (con volumen para `/uploads`). El Frontend se correrá fuera de Docker.
+- **Producción Dokploy (`docker-compose.yml`):** Levanta PostgreSQL, ChromaDB, el Backend en Go, y añade un servicio extra para el **Frontend** (Crea un Dockerfile multi-stage en `/frontend` que compile Quasar y sirva los estáticos con Nginx).
+- **Scripts locales (`/scripts`):** Crea `start-dev.ps1` (usa el compose dev), `stop.ps1`, `rebuild-backend.ps1`, y un script `deploy.ps1` (que simplemente haga git add, commit y push origin main para disparar Dokploy).
+
+# 3. BACKEND (Go + Gin)
+- Framework: Usa Gin para la API REST.
+- Base de Datos Relacional (PostgreSQL): Usa GORM o database/sql para crear:
+  1. Tabla `settings`: API Key activa, nombre del LLM y proveedor de Embeddings.
+  2. Tabla `documents`: ID, nombre original, ruta física en servidor (`/uploads/...`) y fecha de subida.
+- Procesamiento de PDF y Almacenamiento: 
+  1. Al recibir un PDF, guárdalo físicamente en `/uploads` y regístralo en PostgreSQL.
+  2. Lee el texto de corrido (librería estándar de Go).
+  3. Chunking: Recursive Character Text Splitter (~1000 chars, 200 overlap). Inyecta el ID/nombre del archivo como metadato.
+- VectorDB: Conecta a ChromaDB. Si se elimina un documento mediante la API, borra sus vectores en ChromaDB, su registro en PostgreSQL y el archivo físico del disco.
+- LLM y Embeddings: Crea interfaces (ports/adapters). Por defecto, usa la API de Gemini leyendo credenciales desde PostgreSQL.
+
+# 4. FRONTEND (Vue 3 + Quasar + Pinia)
+- Crea un layout principal con un Sidebar.
+- Vistas del Sidebar:
+  1. **Chat (RAG):** Vista principal tipo ChatGPT. Mensajes viven en la sesión de Pinia. Sin fuentes visibles.
+  2. **Subida de Archivos:** Vista con `QFile` o `QUploader`.
+  3. **Gestor de Políticas:** `QTable` que liste PDFs subidos leyendo de PostgreSQL. Botón para "Eliminar" (llama al endpoint de Go).
+  4. **Configuraciones:** Formulario para API Key y modelo (POST/PUT al backend).
+- Estado global: Usa Pinia para configuraciones e historial del chat.
+- Configura llamadas a la API usando variables de entorno para que funcione en local y en producción.
+
+# 5. RESTRICCIONES Y METODOLOGÍA
+- Separa la lógica de negocio de los controladores en Go.
+- Configura CORS en Gin permitiendo orígenes dinámicos o amplios para desarrollo.
+- Asegúrate de crear los archivos `.gitignore` correspondientes (ignorando `.env`, carpetas `node_modules`, binarios de Go, y el contenido de la carpeta local de `/uploads`).
+
+Por favor, comienza analizando este requerimiento. Luego, pídeme permiso para empezar inicializando Git, creando los directorios base y la infraestructura Docker como primer paso.
