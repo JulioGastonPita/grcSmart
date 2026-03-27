@@ -43,6 +43,7 @@ services:
       CHROMA_URL: http://chromadb:8000
       UPLOADS_DIR: /uploads
       GIN_MODE: release
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     volumes:
       - uploads_data:/uploads
     depends_on:
