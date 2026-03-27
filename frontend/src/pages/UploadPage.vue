@@ -18,6 +18,15 @@
         <template v-slot:header="scope">
           <div class="row no-wrap items-center q-pa-sm q-gutter-xs">
             <q-btn
+              icon="add_box"
+              round
+              dense
+              flat
+              @click="scope.pickFiles"
+            >
+              <q-tooltip>Seleccionar archivos</q-tooltip>
+            </q-btn>
+            <q-btn
               v-if="scope.queuedFiles.length > 0"
               icon="clear_all"
               round
