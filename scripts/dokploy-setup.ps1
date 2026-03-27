@@ -96,49 +96,13 @@ catch {
     Write-Host "  Sin servidores remotos - usando servidor local." -ForegroundColor Yellow
 }
 
-# --- PASO 2: Crear proyecto -----------------------------------
+# --- PASO 2: Crear proyecto (incluye environment por defecto) ---
 Step "Creando proyecto '$ProjectName'..."
-$project = Invoke-Dokploy -Endpoint "project.create" -Body @{ name = $ProjectName; description = $ProjectDescription }
-
-# Debug: mostrar respuesta cruda
-Write-Host "  Respuesta raw proyecto:" -ForegroundColor DarkGray
-Write-Host ($project | ConvertTo-Json -Depth 5) -ForegroundColor DarkGray
-
-# tRPC puede envolver la respuesta en result.data
-if ($project.result) { $project = $project.result.data }
-
-$projectId = $project.projectId
-Write-Host "  Proyecto creado (ID: $projectId)" -ForegroundColor Green
-
-# --- PASO 3: Obtener environment por defecto -----------------
-Step "Obteniendo environment del proyecto..."
-$inputJson    = (@{ projectId = $projectId } | ConvertTo-Json -Compress)
-$encodedInput = [System.Uri]::EscapeDataString($inputJson)
-$envApiUrl    = "$BaseUrl/environment.byProjectId?input=$encodedInput"
-Write-Host "  URL: $envApiUrl" -ForegroundColor DarkGray
-
-try {
-    $environments = Invoke-RestMethod -Uri $envApiUrl -Method GET -Headers $Headers
-    Write-Host "  Respuesta raw environments:" -ForegroundColor DarkGray
-    Write-Host ($environments | ConvertTo-Json -Depth 5) -ForegroundColor DarkGray
-    if ($environments.result) { $environments = $environments.result.data }
-}
-catch {
-    Write-Host "  Error al obtener environments: $($_.ErrorDetails.Message)" -ForegroundColor Red
-    Write-Host "  Intentando endpoint alternativo project.one..." -ForegroundColor Yellow
-    $inputJson2    = (@{ projectId = $projectId } | ConvertTo-Json -Compress)
-    $encodedInput2 = [System.Uri]::EscapeDataString($inputJson2)
-    $proj = Invoke-RestMethod -Uri "$BaseUrl/project.one?input=$encodedInput2" -Method GET -Headers $Headers
-    Write-Host ($proj | ConvertTo-Json -Depth 8) -ForegroundColor DarkGray
-    exit 1
-}
-
-if (-not $environments -or $environments.Count -eq 0) {
-    Write-Host "No se encontro environment en el proyecto." -ForegroundColor Red
-    exit 1
-}
-$environmentId = $environments[0].environmentId
-Write-Host "  Environment: $($environments[0].name) (ID: $environmentId)" -ForegroundColor Green
+$response      = Invoke-Dokploy -Endpoint "project.create" -Body @{ name = $ProjectName; description = $ProjectDescription }
+$projectId     = $response.project.projectId
+$environmentId = $response.environment.environmentId
+Write-Host "  Proyecto creado     (ID: $projectId)" -ForegroundColor Green
+Write-Host "  Environment default (ID: $environmentId)" -ForegroundColor Green
 
 # --- PASO 4: Crear compose service ---------------------------
 Step "Creando servicio Docker Compose..."
