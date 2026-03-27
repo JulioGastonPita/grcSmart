@@ -10,48 +10,10 @@
         :factory="uploadFactory"
         style="width: 100%; min-height: 200px;"
         color="primary"
-        flat
         bordered
         @uploaded="onUploaded"
         @failed="onFailed"
-      >
-        <template v-slot:header="scope">
-          <div class="row no-wrap items-center q-pa-sm q-gutter-xs">
-            <q-btn
-              icon="add_box"
-              round
-              dense
-              flat
-              @click="scope.pickFiles"
-            >
-              <q-tooltip>Seleccionar archivos</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="scope.queuedFiles.length > 0"
-              icon="clear_all"
-              round
-              dense
-              flat
-              @click="scope.removeQueuedFiles"
-            >
-              <q-tooltip>Limpiar cola</q-tooltip>
-            </q-btn>
-            <div class="col">
-              <div class="q-uploader__title">{{ scope.queuedFiles.length }} archivo(s) en cola</div>
-            </div>
-            <q-btn
-              v-if="scope.queuedFiles.length > 0"
-              icon="cloud_upload"
-              round
-              dense
-              flat
-              @click="scope.upload"
-            >
-              <q-tooltip>Subir todo</q-tooltip>
-            </q-btn>
-          </div>
-        </template>
-      </q-uploader>
+      />
     </q-card>
 
     <q-banner v-if="uploadSuccess" class="q-mt-md bg-positive text-white" rounded>
