@@ -4,6 +4,7 @@ const { configure } = require('quasar/wrappers')
 module.exports = configure(function (/* ctx */) {
   return {
     boot: [
+      'pinia',
       'axios'
     ],
     css: [
