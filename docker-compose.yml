@@ -60,7 +60,7 @@ services:
     container_name: grcsmart_frontend
     restart: always
     ports:
-      - "80:80"
+      - "8200:80"
     depends_on:
       - backend
 
