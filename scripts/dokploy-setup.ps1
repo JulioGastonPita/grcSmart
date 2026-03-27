@@ -140,6 +140,17 @@ else {
     Write-Host "  .\scripts\dokploy-setup.ps1 -Deploy" -ForegroundColor White
 }
 
+# --- Guardar IDs en .env.local para uso posterior ------------
+$envLocalPath2 = Join-Path $PSScriptRoot "..\.env.local"
+$envContent    = Get-Content $envLocalPath2 -ErrorAction SilentlyContinue
+# Eliminar entradas previas de IDs de Dokploy
+$envContent = $envContent | Where-Object { $_ -notmatch "^DOKPLOY_(COMPOSE|PROJECT|ENVIRONMENT|SERVER)_ID=" }
+$envContent += "DOKPLOY_COMPOSE_ID=$composeId"
+$envContent += "DOKPLOY_PROJECT_ID=$projectId"
+$envContent += "DOKPLOY_ENVIRONMENT_ID=$environmentId"
+Set-Content -Path $envLocalPath2 -Value $envContent
+Write-Host "  IDs guardados en .env.local" -ForegroundColor Green
+
 # --- Resumen -------------------------------------------------
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
